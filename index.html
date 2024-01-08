@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!--------css--------->
+    <style>
+        h1{
+            text-align: center;
+            font-size: 5vw;
+        }
+        #hashValue{
+            display: inline-block;
+            position: relative;
+            left: 20px;
+        }
+        #sha{
+            display: inline-block;
+            position: relative;
+            bottom: 120px;
+        }
+    </style>
+<!------javascript------>
+    <script>
+        $(document).ready(generateHash);
+
+        async function digestMessage(message) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(message);
+            const hash = await crypto.subtle.digest("SHA-256", data);
+            return hash;
+        }
+
+        function generateHash() {
+            let text = $("#hashInput").val();
+            digestMessage(text).then((digestBuffer) =>
+                {
+                    let view = new Uint16Array(digestBuffer);
+                    res = "";
+                    for (let index = 0; index < view.length; index++) {
+                        const num = view[index];
+                        res += num.toString(2).padStart(16,"0");
+                        res += "\n";
+                    }
+                    $("#hashValue").html(res);
+                }
+            );
+        }
+
+        async function findPOWloop(text) {
+            let pow = 0;
+            text += "\n";
+            let mod = text + pow;
+            digestMessage(text).then((digestBuffer) =>
+                {
+                    let view = new Uint16Array(digestBuffer);
+                    if(view[0].substring() != "00000000");
+                }
+            );
+        }
+
+        function findPOW() {
+            let text = $("#hashInput").val();
+            findPOWloop(text).then(
+                function(value) {
+
+                }
+            );
+        }
+    </script>
+</head>
+<body>
+    <h1>NFT</h1>
+
+    <h2>Video</h2>
+    <video controls>
+        <source src="assets/NFT.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <h2>Materijali</h2>
+    <ul>
+        <li><a href="assets/NFT.pdf">seminar</a></li> 
+        <li><a href="assets/main.tex">izvorni kod PDF-a</a></li>
+        <li><a href="assets/NFT.pptx">prezentacija</a></li>
+    </ul>
+
+    <h2>Primjeri</h2>
+    <h3>Hash funkcija</h3>
+    <p>
+        Potvrdite da ima funkcijsko svojstvo. Isprobajte za tekstove različitih duljina. Što
+        se događa ako se promijeni samo jedno slovo u tekstu? Pokušajte naći input za koji
+        bi vrijednost funkcije počela s 32 nule ;)
+
+    </p>
+    input: <textarea name="" id="hashInput" cols="20" rows="2">Proizvoljan tekst</textarea>
+    <button id="hashButton" onclick="generateHash()">Generate hash</button>
+    
+    <br><br>
+    <p id="sha">SHA-256(input) = </p> <pre id="hashValue"></pre>
+    <h2>Linkovi</h2>
+    <p>Slike korištene u projektu se nalaze na:</p>
+    <a href="https://eminem.news/wp-content/uploads/2022/01/Eminem-Bored-Ape.jpg">Eminem ape</a> 
+    <br><a href="https://www.rollingstone.com/wp-content/uploads/2021/10/RS-BoardApe_Lead_5.jpg">apes bcg</a> 
+    <br><a href="https://www.ku.ac.ae/wp-content/uploads/2022/06/Blockchain-in-the-Oil-and-Gas-Industry-min.jpg">blockchain bcg</a>
+    <br><a href="https://img.plasbit.com/Advanced-crypto/node+crypto.jpg">main bcg</a>
+    <br><a href="https://images.ctfassets.net/80xn33n7spuq/19WnVoWzSXS1WB1UNBGhdz/362ff47b5cae7a059440846fb489275f/01_KevinMcCoyQuantum.gif">quantum gif</a>
+</body>
+</html>

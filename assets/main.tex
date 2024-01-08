@@ -1,0 +1,225 @@
+%%%%%%%%%%%%%%%%%%%%%%% SETUP %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{scrartcl} % article
+\usepackage{graphicx} % Required for inserting images
+\usepackage[utf8]{inputenc} % encoding
+\usepackage[croatian]{babel} % cro letters
+\usepackage{amsmath,amssymb,amsthm} % math
+\usepackage{xcolor}
+\usepackage{csquotes} % navodnici
+\MakeOuterQuote{"} %% naredba iz csquotes
+\usepackage{mathrsfs} % lijepo pisana slova
+\usepackage[unicode]{hyperref} % reference
+\usepackage[style=numeric]{biblatex} % literatura
+%\addbibresource{literatura.bib} % literatura
+\usepackage{mathtools} % uređivanje
+\usepackage{thmtools} % mat. okoline
+\usepackage{tikz} % crtanje
+\usepackage{placeins}
+
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black}, %% link unutar istog dokumenta
+    citecolor={blue!50!black}, %% citiranje vanjskog dokumenta : link na bibliografiju
+    urlcolor={blue!80!black} %% url
+}
+
+%%%%%%%%%%%%%%%%%%%%% NAREDBE %%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\tb}[1]{
+\textbf{#1}
+}
+
+\newcommand{\tt}[1]{
+\text{#1}
+}
+
+\newcommand{\red}[1]{
+\color{red} #1 \color{black}
+}
+
+\newcommand{\korisnici}{\mathcal{K}}
+
+\newcommand{\miners}{\mathcal{M}}
+
+\declaretheorem[style=remark, qed=$\diamondsuit$]{primjer}
+
+%%%%%%%%%%%%%%%%%%%% DOKUMENT %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{NFT}
+\author{Mihael Petrinjak}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+\section{Uvod}
+NFT je nedavno izazvao veliko komešanje na internetu. Koliko u svijetu novaca toliko i mišljenja ljudi. Radi se o pojmu srodnom kriptovalutama. Na neki način njihovo multimedijsko proširenje.
+
+Kako bismo mogli razumjeti virtualizaciju vrijednosti proučit ćemo \emph{blockchain} paradigmu te kako se NFT sustavi koriste njenim alatima. Na kraju će biti jasno da je to samo prva stranica u ekonomskoj i kulturološkoj evoluciji čovjeka.
+
+\section{Blockchain}
+
+Blockchain je dostupan svima. Funkcionira kao javni zapisnik u koji korisnici mogu napisati neki podatak. Glavna karakteristika je \enquote{nepromjenjivost} podataka nakon unosa.
+\subsection{Arhitektura}
+Blockchain je vezana lista podatkovnih struktura --- \tb{blokova} sa sadržajem podjeljenim u tri dijela:
+\begin{itemize}
+    \item podaci
+    \item hash prethodnog bloka
+    \item hash
+\end{itemize}
+Podaci su u svijetu kriptovaluta, na primjer informacije o pošiljatelju, primatelju i količina novaca. Točno ono što opisuje transakcije.
+
+hash je slika neke funkcije $h$ za hashiranje čija praslika je sadržaj bloka bez te vrijednosti. Preciznije, $\tt {hash} = h(\tt {podaci} * \tt {hash\_prethodnog\_bloka})$, gdje $*$ označava neki oblik konkatenacije teksta. Očito, argument funkcije može biti proizvoljan tekst. hash je neki dugačak niz bitova. Poznata implementacija je SHA256 čija kodomena su svi nizovi od 256 bitova. Nazovimo spomenute dijelove \tb{hash, data, pbHash} radi lakoće pisanja.
+
+\begin{primjer}\label{primjer:lanac}
+
+Neka su u lancu tri bloka $\tt{start}, b_2, b_3$. U tablici \ref{tab:e1} je prikazan njihov sadržaj. Pretpostavimo da netko želi retroaktivno promijeniti sadržaj u $b_2$. Blok će gotovo sigurno imati novi hash. Treći blok više ne pokazuje na svog prethodnika i time je lanac prekinut.
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        & start & $b_2$ & $b_3$ \\
+        \hline
+        data & abc & def & ghi \\
+        \hline 
+        pbHash & 000 & $h_1$ & $h_2$ \\
+        \hline
+        hash & $h_1$ & $h_2$ & $h_3$ \\
+        \hline
+    \end{tabular}
+    \caption{Primjer lanca}
+    \label{tab:e1}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+    \hline
+        & start & $b_2$ & $b_3$ \\
+        \hline
+        data & abc & \red{bad} & ghi \\
+        \hline 
+        pbHash & 000 & $h_1$ & $h_2$ \\
+        \hline
+        hash & $h_1$ & \red{$h_2'$} & $h_3$ \\
+    \hline
+    \end{tabular}
+    \caption{Promjena lanca}
+    \label{tab:e1-promjena}
+\end{table}
+
+\FloatBarrier
+\end{primjer}
+
+\subsection{Sigurnost} \label{sub:sig}
+Postavlja se pitanje što sprječava nekoga da izmjeni sadržaj nekog bloka $b_j$ i svih idućih blokova u lancu $(b_0, b_1, b_2, \dots, b_j, \dots, b_n)$ i tako \emph{validira} laž. Sve što treba napraviti nakon promjene u bloku $b_j$ je izračunati 
+\[ \{\tt{hash}_i = h(\tt{data}_i * \tt{hash}_{i-1}) : i \geq j\} \] po redu od najmanjeg do najvećeg indeksa na kraju lanca. Uz snagu današnjih računala to se ne čini kao jako zahtjevan zadatak.
+
+\subsubsection{Hash funkcije}
+Ulaz algoritma je proizvoljan tekst, a povratna vrijednost neki dugalčak niz bitova. Za danu vrijednost \emph{kriptografske} hash funkcije algoritamksi je jako skupo pronalaženje njene praslike. Do sad nije nađen pametniji način od pogađanja o kojoj se vrijednosti radi. Naime, za dva proizvoljna argumenta \texttt{String s1, s2} koji se razlikuju u samo jednom slovu, vrijednosti $h(s_1)$ i $h(s_2)$ su neusporedivo različite. Čini se kao da su vrijednosti nasumične. 
+
+\subsubsection{Proof of work}
+Kako bi se iskoristila opisana svojstva, u svakom bloku se pojavljuje i \emph{proof of work}. Nadograđeni izgled bloka, odnosno lanca prikazan je u tablici \ref{tab:e3}. hash se računa slično kao u primjeru \ref{primjer:lanac}: $h(\tt{data} * \tt{pbHash} * \tt{POW})$. Vrijednosti $h_i$ sada imaju svojstvo da je prvih $k$ bitova jednako nuli. $k$ ovisi o tome koliko želimo da bude skupo računanje POW. Promotrimo slučaj kada je $k = 30$. Vjerojatnost da je prvih 30 bitova od $h(\tt{rand})$ za \texttt{String rand} nasumičan input jednako nuli je $1/{2^{30}} \approx 1/10^{9}$. Preciznije, ako funkcija start$_{30}(x)$ vraća prvih 30 bitova od $x$ u binarnom zapisu duljine 256,
+\[\mathbb{P}(\tt{start}_{30}(h(\tt{rand})) = 0) \approx 1/10^{9}.\]
+To znači da je osoba koja je pronašla proof of work za dani blok morala proći kroz milijardu nasumičnih brojeva $x$ i provjeravati traženo svojstvo $h(\tt{data} * \tt{pbHash} * x)$
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        & start & $b_2$ & $b_3$ \\
+        \hline
+        data & abc & def & ghi \\
+        \hline 
+        pbHash & 000 & $h_1$ & $h_2$ \\
+        \hline
+        POW & $p_1$ & $p_2$ & $p_3$ \\
+        \hline
+        hash & $h_1$ & $h_2$ & $h_3$ \\
+        \hline
+    \end{tabular}
+    \caption{Primjer lanca s POW}
+    \label{tab:e3}
+\end{table}
+
+Vratimo se sada na pokušaj prijevare opisan na početku poglavlja \ref{sub:sig}. Kako bi lanac nakon promjene u bloku $j$ postao valjan potrebo je izračunati
+\[ \{\tt{POW}_i : \tt{start}_{30}(h(\tt{data}_i * \tt{hash}_{i-1} * \tt{POW}_i )) = 0, i \geq j\} .\]
+%%%%%%%%%%%%%%%% # znakova = 3343 %%%%%%%%%%%%%%%%%%%%%%
+Ako se radi lancu duljine $n$ za takav pothvat potrebno je napraviti $n\cdot 10^{9}$ provjera za POW. Stare blokove u lancu jako je skupo mijenjati. 
+%%%%%%%%%%%% TANGENTA O BRZINI RAČUNALA ? %%%%%%%%%%%%%%%%%%
+
+\section{Kriptovalute}
+Sada imamo dovoljno resursa za dizajn sustava kriptovaluta. Neka je $\korisnici$ skup korisnika. Radi jednostavnosti pretpostavimo da se za svaku transakciju dodaje novi blok u block\-chain. data komponenta bloka je (pošiljatelj, primatelj, količina\_novaca). Vrijednost novaca izražena je u izmišljenoj valuti. U stvarnosti postoji i digitalni potpis pošiljatelja, ali ovdje se nećemo baviti tom implementacijom. Dovoljno je reći da svaki korisnik može dodavati transakcije u kojima je on naveden kao pošiljatelj. Odnosno ne može u tuđe ime slati sebi novce. Svaki korisnik ima lokalnu kopiju cijelog lanca. Ako je $A \in \korisnici$, onda s $L_A$ označavamo lokalnu kopiju lanca od $A$. 
+\subsection{Algoritam}
+Nakon dodavanja transakcije i hash-a prethodnog lanca radi se broadcast na mrežu sustava. Nakon toga netko mora izračunati proof of work tako da početni komad od hash vrijednosti bude jednak nuli. Tek tada će blok biti validan član lanca. Za to postoji skup $\miners$ čiji članovi paralelno računaju POW. 
+
+\begin{primjer}
+Ako Alice $A \in \korisnici$ želi poslati 10 jedinica valute Bobu $B \in \korisnici$ i zadnji blok u lancu ima hash jednak $h_l$, ona mora pripremiti blok $b_\tt{new}$ kako je prikazano u tablici \ref{tab:e4}.
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        & ... & $b_l$ & $b_\tt{new}$ \\
+        \hline
+        data & ... & ... & (Alice, Bob, 10) \\
+        \hline 
+        pbHash & ... & $h_{l-1}$ & $h_l$ \\
+        \hline
+        POW & ... & $p_l$ & \red{?} \\
+        \hline
+        hash & ... & $h_l$ & \red{?} \\
+        \hline
+    \end{tabular}
+    \caption{Priprema transakcije}
+    \label{tab:e4}
+\end{table}
+Tako pripravljeni podaci broadcastaju se svim članovima $\miners$. 
+\FloatBarrier
+\end{primjer}
+Nakon što jedan \enquote{miner} iz $\miners$ nađe \enquote{dobitnu} kombinaciju, blok je potpun i izračunate su vrijednosti $p_l$ i $h_l$. Takav potpuni blok broadcasta se svima iz $\korisnici$. Za svakog $K \in \korisnici$ $L_K$ se nadograđuje s novim blokom. Tada je sustav opet u stanju u kojem svi posjeduju jednaku kopiju lanca. 
+
+\subsection{Prijevara}
+Analizirajmo što sve treba napraviti netko tko se želi obogatiti varanjem drugih korisnika. Budući da si ne može slati novce u tuđe ime, može pokušati podmetnuti nekome krivotvorenu verziju lanca. 
+\begin{primjer}
+Recimo da Alice $A \in \korisnici$ želi prevariti Boba $B \in \korisnici$ tako da manipuliranjem mreže samo njemu pošalje krivotvoreni potpuni blok $b_k$ takav da \texttt{b\_k.data == (Alice, Bob, 10)}. Potpuni znači da je ona izračunala POW i hash komponente. Iz Bobove perspektive algoritma sve je u redu. 
+\end{primjer}
+Problem nastaje u održavanju laži kroz vrijeme. Naime, sustav i dalje koriste svi ostali korisnici, ali u njihovim kopijama lanca ne postoji podmetnuti blok $b_k$. Kada neki drugi korisnik $C$ napravi transakciju u $L_C$ se na mejstu $b_k$ nalazi $b_{l+1}$ i takav lanac dolazi do Boba. Bobova lokalna kopija sada ima račvanje:
+\[
+\tt{blockchain} = b_0,\hdots, b_{l-1}, b_{l}, \begin{cases}
+    b_k & \\
+    b_{l+1} &
+\end{cases}
+.\]
+Kad bi u ovom trenutku Alice prestala održavati laž, zbog aktivnosti drugih korisnika, nakon nekog vremena bi lanac izgledao ovako:
+\[
+\tt{blockchain} = b_0,\hdots, b_{l-1}, b_{l}, \begin{cases}
+    b_k & \\
+    b_{l+1}, b_{l+2}, \hdots, b_{l+m} &
+\end{cases}
+.\]
+Algoritam prihvaćanja lanaca za dovoljno veliku $m$ odbacuje verziju koja sadrži $b_k$. Dakle, u tom slućaju prijevara ne uspjeva. Ako želi zaraditi, Alice mora imati procesorsku moć veću od cijelog skupa $\miners$. 
+
+Vidimo da prolaskom vremena stariji blokovi postaju vjerodostojni i u ono što je zapisano u njima možemo sa sigurnošću vjerovati.
+
+%%%%%%%%%%%%%%%%%%%% #characters = 5573 %%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{NFT}
+NFT je kratica za \emph{Non Fungable Token} što znači \emph{nezamjenjivi} token. Za razliku od novčanica koje se smatraju \emph{zamjenjivima}, NFT smatramo jedisntvenom jedinkom. Iz skupa svih novčanica od 10 eura nije bitno koju imamo dok god ona prikazuje broj 10. NFT jednom kad nastane definira sam svoju klasu ekvivalencije. Najčešće se radi o slikama, fotografijama, videozapisima i glazbi. 
+
+\subsection{Integracija u blockchain}
+
+Sada se postavlja pitanje kako neku datoteku koju svatko može bez poteškoća kopirati i distribuirati učiniti jedinstvenom. U idealnom slučaju postoji servis za pohranu kojem svi vjeruju. To znači da je uvijek i javno dostupan te da njegove poveznice zauvijek pokazuju na iste datoteke. U takvim uvjetima davanje vrijednosti multimedijskim \enquote{tokenima} svodi se na zapisivanje uređene četvorke \texttt{(ID\_kupca, ID\_prodavača, web\_link\_datoteke, novčani\_iznos)} u blockchain. Za proizvoljnu osobu iz $\korisnici$ koja prihvaća vrijednosni sustav, referencirana datoteka pripada navedenom kupcu i ima vrijednost \texttt{novčani\_iznos} jer je toliko plačeno za njeno posjedovanje. Može se usporediti s kupovinom materijalne slike nekog slikara na aukciji. Ako netko drugi pokuša glumiti vlasnika i prodati NFT, jedino što potencijalni kupac mora provjeriti informacije je u blockchainu. 
+SItuacija nije idealna i postoje mnoga otvorena pitanja. Kako, na primjer centralizirati servis za pohranu podataka za sve korisnike i spriječiti \emph{link rot}, odnosno osigurati dugovječnost podataka? 
+
+\section{Budućnost}
+
+Trenutno ne postoji jasna integracija NFT-jeva u zakone o autorskim pravima i vlasništvu. Zlonamjerna osoba lako može preko reference zapisane u blockchain-u pronaći datoteku i kopirati na svoje računalo. Ne postoji mehanizam za sprječavanje takvog ponašanja. 
+
+Dostupnost, sigurnost i decentralizaciju koje nudi blockchain doimaju se obečavajućima. Polagano se otvaraju vrata nove ekonomske organizacije svijeta. Nema razloga stati na multimediji. U blockchain bi se uz još malo nadogradnje moglo zapisati sve što čovjeku padne na pamet. Jedino teško pitanje je suglasnost korisnika sustava.
+
+\end{document}
